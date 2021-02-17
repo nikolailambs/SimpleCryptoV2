@@ -2,7 +2,6 @@ import * as React from 'react';
 import {
   Image,
   Platform,
-  ScrollView,
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
@@ -12,13 +11,14 @@ import {
   Animated,
   AsyncStorage,
 } from 'react-native';
-import { Text, GreyView, WhiteView } from '../components/Themed';
+import { Text, GreyView, WhiteView, GreyScrollView } from '../components/Themed';
 
 import { Overlay, SearchBar, Button } from 'react-native-elements';
 import { Ionicons } from '@expo/vector-icons';
 
 import DashboardCard from '../components/DashboardCard';
 
+import { sendPushNotification, normalize } from '../Utils/Functions';
 
 
 
@@ -33,6 +33,8 @@ export default class DashboardScreen extends React.Component {
       favCoinsHistoryLoaded: false,
       favoriteCoinsLoaded: false,
       favoriteCoins: [],
+      notificationsLoaded: false,
+      notifications: [],
     }
   };
 
@@ -50,6 +52,7 @@ export default class DashboardScreen extends React.Component {
     // this.firstTimeSetFavoriteCoins();
     this.getHotCoins();
     this.getFavoriteCoins();
+    // this.getNotifications();
     this.timer = setInterval(()=> {
       this.getFavoriteCoinsHistory();
       this.getCryptoHistory();
@@ -75,6 +78,19 @@ export default class DashboardScreen extends React.Component {
     } catch (error) {
       // Error retrieving data
       console.log(error.message);
+    }
+  }
+
+// get notifications
+  getNotifications = async () => {
+    try {
+      let notifications = await AsyncStorage.getItem('notifications');
+      this.setState({
+        notifications: notifications ? JSON.parse(notifications) : [],
+        notificationsLoaded: true,
+      });
+    } catch (error) {
+      // Error retrieving data
     }
   }
 
@@ -182,11 +198,16 @@ export default class DashboardScreen extends React.Component {
         // onPress={() => this.setState({overlay: true})}
         // fetchIndex={this.state.fetchIndex}
         // chartColorOnChange={this.state.chartColorOnChange}
+        isFavorite={true}
+        notifications={this.state.notifications.filter(function( obj ) {
+              return obj.coinSymbol.toLowerCase()  == coin.symbol.toLowerCase();
+          })
+        }
       />
     )
   }
 
-uni = 4.8100
+// uni = 4.8100
 
   renderHotCoinCards() {
     const hotCoins = this.state.hotCoins;
@@ -213,6 +234,8 @@ uni = 4.8100
         // onPress={() => this.setState({overlay: true})}
         // fetchIndex={this.state.fetchIndex}
         // chartColorOnChange={this.state.chartColorOnChange}
+        isFavorite={false}
+        notifications={this.state.notifications}
       />
     )
   }
@@ -224,9 +247,11 @@ uni = 4.8100
 
   render(){
 
+    // console.log(global.expoPushToken)
+
 
     return (
-      <ScrollView
+      <GreyScrollView
         style={styles.container}
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -237,6 +262,29 @@ uni = 4.8100
           />
         }>
         <Text style={[styles.homeHeaderTitle, {marginTop: 50}]}>⭐️ Favorite Cryptos</Text>
+{// Notifications test start
+
+        // <GreyView
+        //   style={{
+        //     flex: 1,
+        //     alignItems: 'center',
+        //     justifyContent: 'space-around',
+        //   }}>
+        //   <Text>Your expo push token: {global.expoPushToken}</Text>
+        //   <GreyView style={{ alignItems: 'center', justifyContent: 'center' }}>
+        //     <Text>Title:  </Text>
+        //     <Text>Body: </Text>
+        //     <Text>Data: </Text>
+        //   </GreyView>
+        //   <Button
+        //     title="Press to Send Notification"
+        //     onPress={async () => {
+        //       await sendPushNotification(global.expoPushToken, "This is the title", "And here the body");
+        //     }}
+        //   />
+        // </GreyView>
+// Notifications test end
+}
         <GreyView style={styles.homeHeader}>
           {this.state.favoriteCoins.length > 0 ?
             this.state.favCoinsHistoryLoaded ?
@@ -262,7 +310,7 @@ uni = 4.8100
             </GreyView>
           }
         </GreyView>
-      </ScrollView>
+      </GreyScrollView>
     );
   }
 }
@@ -292,12 +340,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingTop: 15,
-    backgroundColor: '#f8f8f8',
+    // backgroundColor: '#f8f8f8',
   },
   homeHeaderTitle: {
-    fontSize: 35,
+    fontSize: normalize(27),
     // marginBottom: 10,
-    color: '#232323',
+    // color: '#232323',
     textAlign: 'center',
     fontFamily: 'nunito',
   },

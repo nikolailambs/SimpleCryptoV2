@@ -1,16 +1,15 @@
 {
   "expo": {
-    "name": "SimpleCryptoV2",
-    "slug": "SimpleCryptoV2",
-    "version": "1.0.0",
-    "orientation": "portrait",
+    "name": "SimpleCrypto",
+    "slug": "SimpleCrypto",
+    "version": "1.3.6",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/images/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#f8f8f8"
     },
     "updates": {
       "fallbackToCacheTimeout": 0
@@ -19,7 +18,8 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.nikolailambsdorff.simplecrypto"
     },
     "android": {
       "adaptiveIcon": {

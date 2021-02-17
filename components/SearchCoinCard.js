@@ -1,8 +1,6 @@
 
 import React from 'react';
 import {
-  View,
-  Text,
   StyleSheet,
   Image,
   TouchableHighlight,
@@ -11,13 +9,14 @@ import {
   NativeModules,
   LayoutAnimation,
 } from 'react-native';
+import { Text, GreyView, WhiteView, GreyScrollView } from '../components/Themed';
 
-import { createStackNavigator } from 'react-navigation';
 
 import CryptoChart from './CryptoChart';
 
 import { images } from '../Utils/CoinIcons';
 import { colors } from '../Utils/CoinColors';
+import { normalize } from '../Utils/Functions';
 
 const { UIManager } = NativeModules;
 
@@ -52,18 +51,18 @@ render(){
       <TouchableHighlight
         onPress={() => this.props.onPress()} 
         underlayColor='#f4f4f4'>
-        <View style={cardContainer}>
-          <View style={{flex: 1, flexDirection: 'row'}}>
+        <WhiteView style={cardContainer}>
+          <WhiteView style={{flex: 1, flexDirection: 'row'}}>
             <Image
               style={[styles.image, {backgroundColor: color}]}
               source={ icon }
             />
-            <View>
+            <WhiteView>
               <Text style={coinSymbol}>{this.props.symbol.toUpperCase()}</Text>
               <Text style={coinName}>{this.props.coinName}</Text>
-            </View>
-          </View>
-        </View>
+            </WhiteView>
+          </WhiteView>
+        </WhiteView>
       </TouchableHighlight>
     );
   }
@@ -80,13 +79,13 @@ const styles = StyleSheet.create({
     display: "flex",
     flexDirection: "row",
     justifyContent: 'space-between',
-    backgroundColor: '#ffffff',
+    // backgroundColor: '#ffffff',
     marginBottom: 10,
     padding: 10,
     marginLeft: 10,
     marginRight: 10,
     borderRadius: 20,
-    borderColor: '#ededed',
+    // borderColor: '#ededed',
     borderWidth: 1,
     // shadowOpacity: 0.3,
     // shadowRadius: 8,
@@ -106,7 +105,7 @@ const styles = StyleSheet.create({
     borderColor: '#ffffff',
   },
   coinSymbol: {
-    fontSize: 20,
+    fontSize: normalize(15),
     marginTop: 10,
     marginLeft: 20,
     marginRight: 5,

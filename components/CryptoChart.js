@@ -1,14 +1,15 @@
 import React from 'react';
-import { View, Button, StyleSheet, Dimensions, PanResponder, TouchableOpacity } from 'react-native';
+import { Button, StyleSheet, Dimensions, PanResponder } from 'react-native';
+import { GreyView, WhiteView, WhiteTouchableOpacity } from '../components/Themed';
 
-import { LineChart, YAxis, Grid, Path, BarChart } from 'react-native-svg-charts';
+import { LineChart, YAxis, Grid, BarChart } from 'react-native-svg-charts';
 import * as shape from 'd3-shape';
-import { Circle, G, Line, Rect, Text, Defs, LinearGradient, Stop, ClipPath } from 'react-native-svg';
+import { Circle, Text, G, Line, Rect, Defs, Path, LinearGradient, Stop, ClipPath } from 'react-native-svg';
 import Moment from 'moment';
 import * as Haptics from 'expo-haptics';
 
 import { colors } from '../Utils/CoinColors';
-import { renderPriceNumber } from '../Utils/Functions';
+import { renderPriceNumber, normalize } from '../Utils/Functions';
 
 // import GestureRecognizer, {swipeDirections} from 'react-native-swipe-gestures';
 
@@ -219,7 +220,7 @@ export default class CryptoChart extends React.PureComponent {
       xSwipeTwo = 0
     }
 
-    // FIRST Date position Values
+// FIRST Date position Values
     let firstDatePositionValue = 0;
     if ( this.state.xtouch < 40 ) {
       // as we are using this with xtouch to be independent from the chart range, we need to put a threshhold on 40
@@ -227,13 +228,15 @@ export default class CryptoChart extends React.PureComponent {
     }else if( this.state.xtouch > chartWidth - 41 ){
       firstDatePositionValue = - 40 + (chartWidth-this.state.xtouch) <= -40 ? -40 : - 40 + (chartWidth-this.state.xtouch);
     };
-    // SECOND Date position Values
+
+// SECOND Date position Values
     let secondDatePositionValue = 0;
     if ( this.state.xtouchTwo < 40 ) {
       secondDatePositionValue = 40 - this.state.xtouchTwo >= 40 ? 40 : 40 - this.state.xtouchTwo;
     }else if( this.state.xtouchTwo > chartWidth - 41 ){
       secondDatePositionValue = - 40 + (chartWidth-this.state.xtouchTwo) <= -40 ? -40 : - 40 + (chartWidth-this.state.xtouchTwo);
     };
+
 
 // set values
     let firstDate = dates[xSwipe];
@@ -249,6 +252,7 @@ export default class CryptoChart extends React.PureComponent {
                   <Text
                       x={ firstDatePositionValue }
                       dy={ 10 }
+                      fill="#000000"
                       alignmentBaseline={ 'middle' }
                       textAnchor={ 'middle' }
                   >
@@ -283,6 +287,7 @@ export default class CryptoChart extends React.PureComponent {
                   <Text
                       x={ secondDatePositionValue }
                       dy={ 10 }
+                      fill="#000000"
                       alignmentBaseline={ 'middle' }
                       textAnchor={ 'middle' }
                   >
@@ -336,8 +341,8 @@ const fill = '#c5c8c8'
 
 
     return (
-      <View>
-        <View
+      <GreyView>
+        <WhiteView
           style={styles.chartContainer} {...this._panResponder.panHandlers}
           onLayout={(event) => {
               var {x, y, width, height} = event.nativeEvent.layout;
@@ -383,60 +388,60 @@ const fill = '#c5c8c8'
 
               </LineChart>
 
-          </View>
+          </WhiteView>
 
             {
               // <BarChart style={{ height: 40 }} data={data} svg={{ fill }} contentInset={ { top: 10, right: 20, bottom: 10, left: 20 } }>
               // </BarChart>
             }
 
-              <View style={{flex: 1, flexDirection: 'row', justifyContent: 'space-around', margin: 20 }}>
+              <GreyView style={{flex: 1, flexDirection: 'row', justifyContent: 'space-around', margin: 20 }}>
 
-                <TouchableOpacity
-                  style={[styles.button, {backgroundColor: this.props.chartRange == "All" ? color : "#ffffff"}]}
+                <WhiteTouchableOpacity
+                  style={[styles.button, {backgroundColor: this.props.chartRange == "All" ? color : null}]}
                   onPress={() => this.props.updateRange("All") }
                 >
                   <Button title="All" onPress={() => this.props.updateRange("All") } color={ this.props.chartRange == "All" ? '#ffffff' : "#292929"} />
-                </TouchableOpacity>
+                </WhiteTouchableOpacity>
 
-                <TouchableOpacity
-                  style={[styles.button, {backgroundColor: this.props.chartRange == "1Y" ? color : "#ffffff"}]}
+                <WhiteTouchableOpacity
+                  style={[styles.button, {backgroundColor: this.props.chartRange == "1Y" ? color : null}]}
                   onPress={() => this.props.updateRange("1Y") }
                 >
                   <Button title="1Y" onPress={() => this.props.updateRange("1Y") } color={ this.props.chartRange == "1Y" ? '#ffffff' : "#292929"} />
-                </TouchableOpacity>
+                </WhiteTouchableOpacity>
 
-                <TouchableOpacity
-                  style={[styles.button, {backgroundColor: this.props.chartRange == "6M" ? color : "#ffffff"}]}
+                <WhiteTouchableOpacity
+                  style={[styles.button, {backgroundColor: this.props.chartRange == "6M" ? color : null}]}
                   onPress={() => this.props.updateRange("6M") }
                 >
                   <Button title="6M" onPress={() => this.props.updateRange("6M") } color={ this.props.chartRange == "6M" ? '#ffffff' : "#292929"} />
-                </TouchableOpacity>
+                </WhiteTouchableOpacity>
 
-                <TouchableOpacity
-                  style={[styles.button, {backgroundColor: this.props.chartRange == "3M" ? color : "#ffffff"}]}
+                <WhiteTouchableOpacity
+                  style={[styles.button, {backgroundColor: this.props.chartRange == "3M" ? color : null}]}
                   onPress={() => this.props.updateRange("3M") }
                 >
                   <Button title="3M" onPress={() => this.props.updateRange("3M") } color={ this.props.chartRange == "3M" ? '#ffffff' : "#292929"} />
-                </TouchableOpacity>
+                </WhiteTouchableOpacity>
 
-                <TouchableOpacity
-                  style={[styles.button, {backgroundColor: this.props.chartRange == "1W" ? color : "#ffffff"}]}
+                <WhiteTouchableOpacity
+                  style={[styles.button, {backgroundColor: this.props.chartRange == "1W" ? color : null}]}
                   onPress={() => this.props.updateRange("1W") }
                 >
                   <Button title="1W" onPress={() => this.props.updateRange("1W") } color={ this.props.chartRange == "1W" ? '#ffffff' : "#292929"} />
-                </TouchableOpacity>
+                </WhiteTouchableOpacity>
 
-                <TouchableOpacity
-                  style={[styles.button, {backgroundColor: this.props.chartRange == "1D" ? color : "#ffffff"}]}
+                <WhiteTouchableOpacity
+                  style={[styles.button, {backgroundColor: this.props.chartRange == "1D" ? color : null}]}
                   onPress={() => this.props.updateRange("1D") }
                 >
                   <Button title="1D" onPress={() => this.props.updateRange("1D") } color={ this.props.chartRange == "1D" ? '#ffffff' : "#292929"} />
-                </TouchableOpacity>
+                </WhiteTouchableOpacity>
 
-              </View>
+              </GreyView>
 
-          </View>
+          </GreyView>
       )
   }
 }
@@ -486,7 +491,12 @@ function groupAverage(arr, n) {
     }
     result.push(sum/n);
   }
-  return result
+  // remove last number if arr.length is odd, because it gets averaged with 0
+  if (arr.length % 2 == 0) {
+    return result;
+  }else{
+    return result.slice(0, -1);
+  }
 }
 
 
@@ -499,9 +509,9 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginRight: 20,
     marginLeft: 20,
-    backgroundColor: '#ffffff',
+    // backgroundColor: '#ffffff',
     borderRadius: 20,
-    borderColor: '#ededed',
+    // borderColor: '#ededed',
     borderWidth: 1,
     // shadowOpacity: 0.3,
     // shadowRadius: 8,

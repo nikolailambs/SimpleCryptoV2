@@ -1,5 +1,11 @@
 import * as React from 'react';
-import { Text as DefaultText, View as DefaultView } from 'react-native';
+import {
+  Text as DefaultText,
+  View as DefaultView,
+  ScrollView as DefaultScrollView,
+  TouchableOpacity as DefaultTouchableOpacity } from 'react-native';
+
+import { Path as DefaultPath } from 'react-native-svg';
 
 import Colors from '../constants/Colors';
 import useColorScheme from '../hooks/useColorScheme';
@@ -37,14 +43,42 @@ export function Text(props: TextProps) {
 // Views
 export function GreyView(props: ViewProps) {
   const { style, lightColor, darkColor, ...otherProps } = props;
-  const backgroundColor = useThemeColor({ light: lightColor, dark: darkColor }, 'background');
+  const backgroundColor = useThemeColor({ light: '#f8f8f8', dark: darkColor }, 'background');
 
   return <DefaultView style={[{ backgroundColor }, style]} {...otherProps} />;
 }
 
 export function WhiteView(props: ViewProps) {
   const { style, lightColor, darkColor, ...otherProps } = props;
-  const backgroundColor = useThemeColor({ light: Colors.white, dark: darkColor }, 'background');
+  const backgroundColor = useThemeColor({ light: '#ffffff', dark: '#131313' }, 'background');
+  const borderColor = useThemeColor({ light: '#ededed', dark: '#000000' }, 'borderColor');
 
-  return <DefaultView style={[{ backgroundColor }, style]} {...otherProps} />;
+  return <DefaultView style={[{ backgroundColor, borderColor }, style]} {...otherProps} />;
+}
+
+
+// Scroll Views
+export function GreyScrollView(props: ViewProps) {
+  const { style, lightColor, darkColor, ...otherProps } = props;
+  const backgroundColor = useThemeColor({ light: '#f8f8f8', dark: darkColor }, 'background');
+
+  return <DefaultScrollView style={[{ backgroundColor }, style]} {...otherProps} />;
+}
+
+// TouchableOpacity
+export function WhiteTouchableOpacity(props: ViewProps) {
+  const { style, lightColor, darkColor, ...otherProps } = props;
+  const backgroundColor = useThemeColor({ light: '#ffffff', dark: '#131313' }, 'background');
+
+  return <DefaultTouchableOpacity style={[{ backgroundColor }, style]} {...otherProps} />;
+}
+
+
+// Path
+// Funktioniert noch nicht
+export function Path(props: ViewProps) {
+  const { style, lightColor, darkColor, ...otherProps } = props;
+  const stroke = useThemeColor({ light: null, dark: '#131313' }, 'stroke');
+
+  return <DefaultPath stroke={ stroke } {...otherProps} />;
 }

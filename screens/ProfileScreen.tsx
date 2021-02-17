@@ -12,38 +12,40 @@ import {
   Animated,
   Easing,
   AsyncStorage,
+  TextInput,
 } from 'react-native';
-import { Text, GreyView, WhiteView } from '../components/Themed';
+import { Text, GreyView, WhiteView, GreyScrollView } from '../components/Themed';
 
 import * as Haptics from 'expo-haptics';
-import { Ionicons } from '@expo/vector-icons';
+import { FontAwesome } from '@expo/vector-icons';
+import { Picker } from '@react-native-picker/picker';
 
 import { images } from '../Utils/CoinIcons';
 import { colors } from '../Utils/CoinColors';
 import { history } from '../Utils/HistoryHolder';
-import { renderPriceNumber, nFormatter, renderPricePrecentage } from '../Utils/Functions';
-
+import { renderPriceNumber, nFormatter, renderPricePrecentage, normalize } from '../Utils/Functions';
 
 import CoinCard from '../components/CoinCard';
 import CryptoChart from '../components/CryptoChart';
+import NotificationsCard from '../components/NotificationsCard';
 
 
 
 
 export default class ProfileScreen extends React.Component {
 
-static navigationOptions = ({navigation}) => {
-      return {
-        headerLeft: () => (
-          <TouchableOpacity
-            style={{alignItems:'center',justifyContent:'center', width: 50, marginLeft: 10}}
-            onPress={() => navigation.navigate(navigation.route.params.backNavigation) }
-          >
-            <Ionicons name="ios-arrow-back" size={30} color="#a1a1a1" />
-          </TouchableOpacity>
-        ),
-      };
-  }
+// static navigationOptions = ({navigation}) => {
+//       return {
+//         headerLeft: () => (
+//           <TouchableOpacity
+//             style={{alignItems:'center',justifyContent:'center', width: 50, marginLeft: 10}}
+//             onPress={() => navigation.navigate(navigation.route.params.backNavigation) }
+//           >
+//             <FontAwesome name="arrow-back" size={30} color="#a1a1a1" />
+//           </TouchableOpacity>
+//         ),
+//       };
+//   }
 
 
   constructor(props){
@@ -57,6 +59,9 @@ static navigationOptions = ({navigation}) => {
       refreshing: false,
       favoriteCoinsLoaded: false,
       coinDataLoaded: this.props.route.params.coinDataLoaded,
+      notifications: [],
+      notificationsLoaded: false,
+      newNotification: {type:"price", direction:"over", value:null, active:true, coinSymbol:null, id:null},
     }
     this.animatedScrollValue = new Animated.Value(0);
     // console.log(this.props)
@@ -77,6 +82,7 @@ static navigationOptions = ({navigation}) => {
     this.mainFetch();
     this.fetchAdditionalInfos();
     this.getFavoriteCoins();
+    // this.getNotifications();
     if (!this.props.route.params.coinDataLoaded) {
       this.getCoinsIfNotExisting();
     };
@@ -99,7 +105,7 @@ static navigationOptions = ({navigation}) => {
   }
 
 
-
+// get favorite coins
   getFavoriteCoins = async () => {
     try {
       let favoriteCoins = await AsyncStorage.getItem('favoriteCoins');
@@ -113,6 +119,21 @@ static navigationOptions = ({navigation}) => {
   }
 
 
+// get notifications
+  getNotifications = async () => {
+    try {
+      let notifications = await AsyncStorage.getItem('notifications');
+      this.setState({
+        notifications: notifications ? JSON.parse(notifications) : [],
+        notificationsLoaded: true,
+      });
+    } catch (error) {
+      // Error retrieving data
+    }
+  }
+
+
+  // add favorite coin
   toggleFavoriteCoins = async () => {
     let favCoinsArray = this.state.favoriteCoins;
     let thisCoin = this.props.route.params.coin.id;
@@ -129,6 +150,65 @@ static navigationOptions = ({navigation}) => {
       let favoriteCoins = await AsyncStorage.setItem('favoriteCoins', JSON.stringify(favCoinsArray));
       this.setState({
         favoriteCoins: favCoinsArray
+      });
+    } catch (error) {
+      // Error retrieving data
+    }
+  }
+
+
+  // add notification
+  addNotification = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+    // set the new notification
+    let notificationsArray = this.state.notifications;
+    let newNotification = this.state.newNotification;
+    // set an ID. Of the array is empty, set 0
+    let highestID = 0;
+    if ( notificationsArray.length > 0 ) {
+      highestID = Math.max.apply(Math, notificationsArray.map(function(obj) { return obj.id; })); // get the highest ID from the notifications
+    }
+
+    notificationsArray.push({
+      type: newNotification.type,
+      direction: newNotification.type == "price" ? null : newNotification.direction,
+      value: newNotification.value,
+      active: true,
+      coinSymbol: this.props.route.params.coin.symbol,
+      id: highestID +1,
+    });
+
+
+    // update all notification
+    try {
+      let notifications = await AsyncStorage.setItem( 'notifications', JSON.stringify(notificationsArray) );
+      this.setState({
+        notifications: notificationsArray
+      });
+    } catch (error) {
+      // Error retrieving data
+    }
+  }
+
+
+
+  // remove notification
+  removeNotification = async (removedID) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+    // set the new notification
+    let notificationsArray = this.state.notifications;
+
+    notificationsArray = notificationsArray.filter(function( obj ) {
+      return obj.id !== removedID;
+    });
+
+    // update all notification
+    try {
+      let notifications = await AsyncStorage.setItem( 'notifications', JSON.stringify(notificationsArray) );
+      this.setState({
+        notifications: notificationsArray
       });
     } catch (error) {
       // Error retrieving data
@@ -228,7 +308,7 @@ static navigationOptions = ({navigation}) => {
 
 
   setScroll(bool) {
-   this.setState({allowScroll: bool})
+    this.setState({allowScroll: bool})
   }
 
 
@@ -297,11 +377,107 @@ static navigationOptions = ({navigation}) => {
   }
 
 
-    // handleScroll = (event: Object) => {
-    //   if (event.nativeEvent.contentOffset.y < 0) {
-    //     this.setState({scrollDown: event.nativeEvent.contentOffset.y});
-    //   }
-    // }
+
+
+
+
+  // render notifications
+  renderNotifications() {
+    let notifications = this.state.notifications;
+    let thisSymbol = this.props.route.params.coin.symbol;
+
+    notifications = notifications.filter(function( obj ) {
+      return obj.coinSymbol == thisSymbol;
+    });
+
+    return notifications.map((notification) =>
+      <NotificationsCard
+        coinSymbol={notification.coinSymbol}
+        type={notification.type}
+        direction={notification.direction}
+        value={notification.value}
+        active={notification.active}
+        id={notification.id}
+        removeNotification={ () => this.removeNotification(notification.id) }
+      />
+    )
+  }
+
+
+  // the input field for reminders
+  // those notifications should saved locally
+  // maybe I can use BackgroundFetch for fetching the data in the background
+  renderNotificationsInput() {
+    return(
+      <GreyView>
+        <GreyView style={{flex:1, flexDirection:"row", alignItems:"center", justifyContent: "center"}}>
+          <Picker
+            selectedValue={this.state.newNotification.type}
+            style={{width: 150}}
+            onValueChange={(itemValue, itemIndex) => {
+                this.setState({
+                  newNotification: {
+                    type:itemValue,
+                    direction: this.state.newNotification.direction,
+                    value: this.state.newNotification.value
+                  }
+                })
+              }
+            }
+            >
+            <Picker.Item label="price" value="price" />
+            <Picker.Item label="24h change" value="change" />
+          </Picker>
+          <TextInput
+            style={{ height: 40, backgroundColor: '#f2f2f2', borderRadius: 7, width: 80 }}
+            keyboardType={"decimal-pad"}
+            onChangeText={text => this.setState({
+              newNotification: {
+                  direction: this.state.newNotification.direction,
+                  type: this.state.newNotification.type,
+                  value: text
+                }
+              })
+            }
+            value={this.state.newNotification.value}
+          />
+          { // if it is change, add "%"
+          this.state.newNotification.type == "price" ?
+          <Text>$</Text>
+            :
+          <Text>%</Text>
+          }
+          { // if it is change, then show other picker
+          this.state.newNotification.type == "price" ?
+          null
+            :
+          <Picker
+            selectedValue={this.state.newNotification.direction}
+            style={{width: 100}}
+            onValueChange={(itemValue, itemIndex) => {
+                this.setState({
+                  newNotification: {
+                    direction:itemValue,
+                    type: this.state.newNotification.type,
+                    value: this.state.newNotification.value
+                  }
+                })
+              }
+            }
+            >
+            <Picker.Item label="up" value="up" />
+            <Picker.Item label="down" value="down" />
+          </Picker>
+          }
+          <Button
+            onPress={() => this.addNotification()}
+            title="Add"
+          />
+        </GreyView>
+      </GreyView>
+    )
+  }
+
 
 
 
@@ -315,7 +491,6 @@ static navigationOptions = ({navigation}) => {
         </GreyView>
       )
     }
-
 
 
 
@@ -341,22 +516,22 @@ static navigationOptions = ({navigation}) => {
     }
 
 
-    let logoExisting = images[coin.symbol.toLowerCase().replace(/\W/, '')] ? images[coin.symbol.toLowerCase().replace(/\W/, '')] : false;
+    let logoExisting = images[coin.symbol.toLowerCase().replace(/(\W|^\d)/, '')] ? images[coin.symbol.toLowerCase().replace(/(\W|^\d)/, '')] : false;
 
-    var color = colors[coin.symbol.toLowerCase().replace(/\W/, '')]
-        ? colors[coin.symbol.toLowerCase().replace(/\W/, '')]
+    var color = colors[coin.symbol.toLowerCase().replace(/(\W|^\d)/, '')]
+        ? colors[coin.symbol.toLowerCase().replace(/(\W|^\d)/, '')]
         : '#000000';
 
     var transparent = color + '33'
 
     var icon = logoExisting
-      ? {uri: `https://res.cloudinary.com/dcmqib0ib/image/upload/e_colorize:10,co_rgb:${color.replace(/\#/, '')}/v1600413783/CryptoIcons/white/${coin.symbol.toLowerCase().replace(/\W/, '')}.png`}
+      ? {uri: `https://res.cloudinary.com/dcmqib0ib/image/upload/e_colorize:10,co_rgb:${color.replace(/\#/, '')}/v1600413783/CryptoIcons/white/${coin.symbol.toLowerCase().replace(/(\W|^\d)/, '')}.png`}
       : {uri: coin.image};
 
 
     if (logoExisting == 'not transparent') {
       icon = logoExisting
-      ? {uri: `https://res.cloudinary.com/dcmqib0ib/image/upload/v1600413783/CryptoIcons/color/${coin.symbol.toLowerCase().replace(/\W/, '')}.png`}
+      ? {uri: `https://res.cloudinary.com/dcmqib0ib/image/upload/v1600413783/CryptoIcons/color/${coin.symbol.toLowerCase().replace(/(\W|^\d)/, '')}.png`}
       : {uri: this.props.image};
     }
 
@@ -413,9 +588,8 @@ static navigationOptions = ({navigation}) => {
       }
     }
 
-
     return(
-      <ScrollView
+      <GreyScrollView
         scrollEnabled={this.state.allowScroll}
         style={styles.container}
         showsVerticalScrollIndicator={false}
@@ -443,8 +617,8 @@ static navigationOptions = ({navigation}) => {
             </GreyView>
 
             <GreyView style={styles.starWrapper}>
-              <Ionicons
-                name={`ios-star${coinExisting ? '' : '-outline'}`}
+              <FontAwesome
+                name={`star${coinExisting ? '' : '-o'}`}
                 size={35}
                 color={coinExisting ? "#ffe400" : "#a1a1a1"}
                 style={styles.starIcon}
@@ -487,7 +661,7 @@ static navigationOptions = ({navigation}) => {
 
 
 
-        <GreyView style={styles.infoCardsWrapper}>
+        <WhiteView style={styles.infoCardsWrapper}>
 
           <WhiteView style={[styles.infoCards, styles.infoBorderBottom]}>
             <WhiteView style={[styles.infoBlockWrapper, styles.infoBlockFirst]}>
@@ -549,16 +723,28 @@ static navigationOptions = ({navigation}) => {
             </WhiteView>
             <WhiteView style={[styles.infoBlockWrapper, styles.infoBlockSecond]}>
                 <Text style={styles.infoTitle}>CATEGORY</Text>
-                <Text style={styles.infoValue}>{this.state.messariData && !this.state.messariData.status.error_code ? this.state.messariData.data.profile.general.overWhiteView.category : '-'}</Text>
+                <Text style={styles.infoValue}>{this.state.messariData && !this.state.messariData.status.error_code ? this.state.messariData.data.profile.general.overview.category : '-'}</Text>
             </WhiteView>
           </WhiteView>
-        </GreyView>
+        </WhiteView>
 
-          <WhiteView style={styles.coinDescription}>
-            <Text style={{fontSize: 20, fontFamily: 'nunito'}}>{description}</Text>
+          <WhiteView style={[styles.coinDescription, {marginBottom: 150}]}>
+            <Text style={{fontSize: normalize(15), fontFamily: 'nunito'}}>{description}</Text>
           </WhiteView>
 
-      </ScrollView>
+{
+          // <GreyView style={{marginBottom: 150,}}>
+          //   <Text style={[styles.homeHeaderTitle, {marginTop: 50}]}>⏰ Reminder</Text>
+          //     {this.state.notificationsLoaded && this.state.notifications ?
+          //       this.renderNotifications()
+          //       :
+          //       <Text style={{fontSize: normalize(8), fontFamily: 'nunito'}}>No Reminder</Text>
+          //     }
+          //     {this.renderNotificationsInput()}
+          // </GreyView>
+}
+
+      </GreyScrollView>
     )
 
   }
@@ -617,14 +803,14 @@ function addTimeToWeekArray(arrayPrices) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#f8f8f8',
+    // backgroundColor: '#f8f8f8',
   },
   headerWrapper: {
     flexWrap: 'wrap',
     alignItems: 'flex-start',
     flexDirection:'row',
     height: 120,
-    marginTop: 20,
+    marginTop: 90,
   },
   headerContent: {
     flex: 1,
@@ -657,11 +843,11 @@ const styles = StyleSheet.create({
     borderColor: '#f8f8f8',
   },
   nameText: {
-    fontSize: 25,
+    fontSize: normalize(20),
     fontFamily: 'nunito',
   },
   symbolText: {
-    fontSize: 25,
+    fontSize: normalize(20),
     fontFamily: 'nunito',
     color: '#626262',
   },
@@ -670,28 +856,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   coinPrice: {
-    fontSize: 45,
+    fontSize: normalize(35),
     fontFamily: 'nunito',
   },
   dollar: {
-    fontSize: 25,
+    fontSize: normalize(20),
     color: '#979797',
     fontFamily: 'nunito',
   },
   coinPerce24Plus: {
-    fontSize: 35,
+    fontSize: normalize(27),
     marginTop: 10,
     color: "#00BFA5",
     fontFamily: 'nunito',
   },
   coinPerce24Minus: {
-    fontSize: 35,
+    fontSize: normalize(27),
     marginTop: 10,
     color: "#DD2C00",
     fontFamily: 'nunito',
   },
   coinPerceGray: {
-    fontSize: 35,
+    fontSize: normalize(27),
     marginTop: 10,
     color: "#c9c9c9",
     fontFamily: 'nunito',
@@ -702,11 +888,11 @@ const styles = StyleSheet.create({
   infoCardsWrapper: {
     paddingRight: 10,
     paddingLeft: 10,
-    backgroundColor: '#ffffff',
+    // backgroundColor: '#ffffff',
     marginTop: 0,
     margin: 10,
     borderRadius: 20,
-    borderColor: '#ededed',
+    // borderColor: '#ededed',
     borderWidth: 1,
     // shadowOpacity: 0.3,
     // shadowRadius: 8,
@@ -724,7 +910,7 @@ const styles = StyleSheet.create({
     marginRight: 20,
   },
   infoBorderBottom: {
-    borderBottomColor: '#e3e3e3',
+    // borderBottomColor: '#e3e3e3',
     borderBottomWidth: 0.5,
   },
   infoBlockWrapper: {
@@ -747,15 +933,15 @@ const styles = StyleSheet.create({
   },
   infoTitle: {
     textAlign: 'left',
-    fontSize: 15,
+    fontSize: normalize(12),
     color: '#515151',
     fontFamily: 'nunito',
     width: '45%',
   },
   infoValue: {
-    fontSize: 20,
+    fontSize: normalize(15),
     // width: '80%',
-    color: '#000000',
+    // color: '#000000',
     textAlignVertical: 'center',
     textAlign: 'right',
     fontWeight: 'bold',
@@ -776,16 +962,23 @@ const styles = StyleSheet.create({
     paddingRight: 20,
     paddingBottom: 10,
     paddingLeft: 20,
-    backgroundColor: '#ffffff',
+    // backgroundColor: '#ffffff',
     margin: 10,
     borderRadius: 20,
-    borderColor: '#f0f0f0',
+    // borderColor: '#f0f0f0',
     borderWidth: 1,
     // shadowOpacity: 0.3,
     // shadowRadius: 8,
     // shadowColor: '#d1d1d1',
     // shadowOffset: { height: 5, width: 3 },
-    marginBottom: 150,
+    // marginBottom: 150,
+  },
+  homeHeaderTitle: {
+    fontSize: normalize(27),
+    // marginBottom: 10,
+    // color: '#232323',
+    textAlign: 'center',
+    fontFamily: 'nunito',
   },
 })
 

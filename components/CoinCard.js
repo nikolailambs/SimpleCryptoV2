@@ -1,8 +1,6 @@
 
 import React from 'react';
 import {
-  View,
-  Text,
   StyleSheet,
   Image,
   TouchableHighlight,
@@ -11,8 +9,9 @@ import {
   NativeModules,
   LayoutAnimation,
 } from 'react-native';
+import { Text, GreyView, WhiteView } from '../components/Themed';
 
-import { createStackNavigator } from 'react-navigation';
+// import { createStackNavigator } from 'react-navigation';
 
 import { LineChart, YAxis, Grid, AreaChart } from 'react-native-svg-charts';
 import * as shape from 'd3-shape';
@@ -20,7 +19,7 @@ import { Defs, Line, LinearGradient, Path, Stop } from 'react-native-svg';
 
 import { images } from '../Utils/CoinIcons';
 import { colors } from '../Utils/CoinColors';
-import { renderPriceNumber } from '../Utils/Functions';
+import { renderPriceNumber, normalize } from '../Utils/Functions';
 
 import CryptoChart from './CryptoChart';
 
@@ -76,23 +75,22 @@ render(){
   // }
 
 
-  let logoExisting = images[this.props.symbol.toLowerCase().replace(/\W/, '')] ? true : false;
+  let logoExisting = images[this.props.symbol.toLowerCase().replace(/(\W|^\d)/, '')] ? true : false;
 
   var color = logoExisting
-    ? colors[this.props.symbol.toLowerCase().replace(/\W/, '')]
+    ? colors[this.props.symbol.toLowerCase().replace(/(\W|^\d)/, '')]
     : '#ffffff';
 
   var transparent = color + '33'
 
   var icon = logoExisting
-    // ? images[this.props.symbol.toLowerCase().replace(/\W/, '')]
-    ? {uri: `https://res.cloudinary.com/dcmqib0ib/image/upload/e_colorize:10,co_rgb:${color.replace(/\#/, '')}/v1600413783/CryptoIcons/white/${this.props.symbol.toLowerCase().replace(/\W/, '')}.png`}
+    // ? images[this.props.symbol.toLowerCase().replace(/(\W|^\d)/, '')]
+    ? {uri: `https://res.cloudinary.com/dcmqib0ib/image/upload/e_colorize:10,co_rgb:${color.replace(/\#/, '')}/v1600413783/CryptoIcons/white/${this.props.symbol.toLowerCase().replace(/(\W|^\d)/, '')}.png`}
     : {uri: this.props.image};
-
 
   if (logoExisting == 'not transparent') {
     icon = logoExisting
-    ? {uri: `https://res.cloudinary.com/dcmqib0ib/image/upload/v1600413783/CryptoIcons/color/${this.props.symbol.toLowerCase().replace(/\W/, '')}.png`}
+    ? {uri: `https://res.cloudinary.com/dcmqib0ib/image/upload/v1600413783/CryptoIcons/color/${this.props.symbol.toLowerCase().replace(/(\W|^\d)/, '')}.png`}
     : {uri: this.props.image};
   }
 
@@ -141,20 +139,20 @@ render(){
         onPress={() => this.props.onPress()} 
         style={{borderRadius: 20}}
         underlayColor='#f4f4f4'>
-        <View style={cardContainer}>
+        <WhiteView style={cardContainer}>
 
-          <View style={{flex: 1, flexDirection: 'row'}}>
+          <WhiteView style={{flex: 1, flexDirection: 'row'}}>
             <Image
               style={[styles.image, {backgroundColor: logoExisting ? color : null}]}
               source={ icon }
             />
-            <View style={{width: '75%'}}>
+            <WhiteView style={{width: '75%'}}>
               <Text style={coinSymbol} numberOfLines={1}>{this.props.symbol.toUpperCase()}</Text>
               <Text style={coinName} numberOfLines={1}>{this.props.coinName}</Text>
-            </View>
-          </View>
+            </WhiteView>
+          </WhiteView>
 
-              <View style={styles.chartContainer}>
+              <WhiteView style={styles.chartContainer}>
                 <AreaChart
                     style={{ flex: 1, marginLeft: 10, marginRight: 10 }}
                     data={ this.props.sparkLines }
@@ -167,19 +165,19 @@ render(){
                   <Gradient/>
                   <Line/>
                 </AreaChart>
-              </View>
+              </WhiteView>
 
-              <View style={{width: 100}}>
+              <WhiteView style={{width: 100}}>
                 <Text style={coinPrice}>{renderPriceNumber(getlength(this.props.price))}
                   <Text style={moneySymbol}>$</Text>
                 </Text>
                 <Text style={this.props.percentChange < 0 ? coinPerce24Minus : coinPerce24Plus }> {Math.round(this.props.percentChange*100)/100}
-                  <Text style={moneySymbol}> %</Text>
+                  <Text style={[this.props.percentChange < 0 ? coinPerce24Minus : coinPerce24Plus, moneySymbol]}>%</Text>
                 </Text>
-              </View>
+              </WhiteView>
 
 
-        </View>
+        </WhiteView>
       </TouchableHighlight>
     );
   }
@@ -215,11 +213,11 @@ const styles = StyleSheet.create({
     display: "flex",
     flexDirection: "row",
     justifyContent: 'space-between',
-    backgroundColor: '#ffffff',
+    // backgroundColor: '#ffffff',
     margin: 10,
     padding: 10,
     borderRadius: 20,
-    borderColor: '#ededed',
+    // borderColor: '#ededed',
     borderWidth: 1,
     // shadowOpacity: 0.3,
     // shadowRadius: 8,
@@ -234,7 +232,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   coinSymbol: {
-    fontSize: 20,
+    fontSize: normalize(15),
     marginTop: 10,
     marginLeft: 20,
     marginRight: 5,
@@ -246,7 +244,7 @@ const styles = StyleSheet.create({
     fontFamily: 'nunito',
   },
   coinPrice: {
-    fontSize: 20,
+    fontSize: normalize(15),
     marginTop: 10,
     // marginBottom: 5,
     // marginLeft: "auto",
@@ -256,7 +254,7 @@ const styles = StyleSheet.create({
     fontFamily: 'nunitoBold',
   },
   coinPerce24Plus: {
-    fontSize: 20,
+    fontSize: normalize(15),
     color: "#00BFA5",
     marginBottom: 5,
     marginRight: 5,
@@ -265,7 +263,7 @@ const styles = StyleSheet.create({
     fontFamily: 'nunitoBold',
   },
   coinPerce24Minus: {
-    fontSize: 20,
+    fontSize: normalize(15),
     color: "#DD2C00",
     marginBottom: 5,
     marginRight: 5,
@@ -287,7 +285,7 @@ const styles = StyleSheet.create({
     fontFamily: 'nunito',
   },
   rankNumber: {
-    fontSize: 20,
+    fontSize: normalize(15),
     color: '#3a3a3a',
     textAlign: 'center',
     flex: 1,

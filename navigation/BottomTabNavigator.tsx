@@ -2,6 +2,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import * as React from 'react';
+// import animated third party tab bar
+import { AnimatedTabBarNavigator } from "react-native-animated-nav-tab-bar";
 
 import Colors from '../constants/Colors';
 import useColorScheme from '../hooks/useColorScheme';
@@ -16,7 +18,7 @@ import { BottomTabParamList, DashboardParamList, AllParamList, SearchParamList }
 const BottomTab = createBottomTabNavigator<BottomTabParamList>();
 
 export default function BottomTabNavigator() {
-  const colorScheme = useColorScheme();
+  let colorScheme = useColorScheme();
 
   return (
     <BottomTab.Navigator
@@ -26,21 +28,21 @@ export default function BottomTabNavigator() {
         name="Dashboard"
         component={DashboardNavigator}
         options={{
-          tabBarIcon: ({ color }) => <TabBarIcon name="ios-flame" color={color} />,
+          tabBarIcon: ({ color, focused }) => <TabBarIcon focused={focused} name={`ios-pie-chart${focused ? '' : '-outline'}`} color={color} size={"25px"} />,
         }}
       />
       <BottomTab.Screen
         name="All"
         component={AllNavigator}
         options={{
-          tabBarIcon: ({ color }) => <TabBarIcon name="ios-list" color={color} />,
+          tabBarIcon: ({ color, focused }) => <TabBarIcon focused={focused} name={`ios-apps${focused ? '' : '-outline'}`} color={color} size={"25px"} />,
         }}
       />
       <BottomTab.Screen
         name="Search"
         component={SearchNavigator}
         options={{
-          tabBarIcon: ({ color }) => <TabBarIcon name="ios-search" color={color} />,
+          tabBarIcon: ({ color, focused }) => <TabBarIcon focused={focused} name={`ios-search${focused ? '' : '-outline'}`} color={color} size={"25px"} />,
         }}
       />
     </BottomTab.Navigator>
@@ -63,12 +65,12 @@ function DashboardNavigator() {
       <DashboardStack.Screen
         name="DashboardScreen"
         component={DashboardScreen}
-        options={{ headerTitle: 'Dashboard' }}
+        options={{ headerShown: false }}
       />
       <DashboardStack.Screen
         name="ProfileScreen"
         component={ProfileScreen}
-        options={{ headerTitle: 'Profile' }}
+        options={{ headerShown: false }}
       />
     </DashboardStack.Navigator>
   );
@@ -82,12 +84,12 @@ function AllNavigator() {
       <AllStack.Screen
         name="AllScreen"
         component={AllScreen}
-        options={{ headerTitle: 'All' }}
+        options={{ headerShown: false }}
       />
       <AllStack.Screen
         name="ProfileScreen"
         component={ProfileScreen}
-        options={{ headerTitle: 'Profile' }}
+        options={{ headerShown: false }}
       />
     </AllStack.Navigator>
   );
@@ -101,12 +103,12 @@ function SearchNavigator() {
       <SearchStack.Screen
         name="SearchScreen"
         component={SearchScreen}
-        options={{ headerTitle: 'Search' }}
+        options={{ headerShown: false }}
       />
       <SearchStack.Screen
         name="ProfileScreen"
         component={ProfileScreen}
-        options={{ headerTitle: 'Profile' }}
+        options={{ headerShown: false }}
       />
     </SearchStack.Navigator>
   );
